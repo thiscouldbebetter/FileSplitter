@@ -5,14 +5,17 @@ class FileSplittingSession
 	{
 		this.fileUnified = null;
 		this.filesSplit = [];
-		this.bytesPerFileSplit = 1000;
+		this.filesSplitByCountNotSize = false;
+		this.bytesPerFileSplitOrFileCount = 1000;
 	}
 
 	bytesPerFileSplit_Changed(event)
 	{
 		var inputBytesPerFileSplit = event.target;
-		var bytesPerFileSplitAsString = inputBytesPerFileSplit.value;
-		this.bytesPerFileSplit = parseInt(bytesPerFileSplitAsString);
+		var bytesPerFileSplitAsString =
+			inputBytesPerFileSplit.value;
+		this.bytesPerFileSplitOrFileCount =
+			parseInt(bytesPerFileSplitAsString);
 	}
 
 	join()
@@ -107,17 +110,41 @@ class FileSplittingSession
 		var fileToSplitAsBinaryString = fileToSplit.contentsAsBinaryString;
 		var numberOfBytesInFileToSplit = fileToSplitAsBinaryString.length;
 
-		var numberOfFilesSplit = Math.ceil
-		(
-			numberOfBytesInFileToSplit / this.bytesPerFileSplit
-		);
+		var bytesPerFileSplit;
+		var numberOfFilesSplit;
+
+		if (this.filesSplitByCountNotSize)
+		{
+			numberOfFilesSplit =
+				this.bytesPerFileSplitOrFileCount;
+
+			bytesPerFileSplit = Math.ceil
+			(
+				numberOfBytesInFileToSplit
+				/ numberOfFilesSplit
+			);
+		}
+		else
+		{
+			bytesPerFileSplit =
+				this.bytesPerFileSplitOrFileCount;
+
+			numberOfFilesSplit = Math.ceil
+			(
+				numberOfBytesInFileToSplit
+				/ bytesPerFileSplit
+			);
+		}
 		
 		var fileNameRoot = fileToSplit.name + "-";	
 
 		for (var i = 0; i < numberOfFilesSplit; i++)
 		{
-			var byteIndexStart = i * this.bytesPerFileSplit;
-			var byteIndexEnd = byteIndexStart + this.bytesPerFileSplit - 1;
+			var byteIndexStart =
+				i * bytesPerFileSplit;
+
+			var byteIndexEnd =
+				byteIndexStart + bytesPerFileSplit - 1;
 
 			if (byteIndexEnd >= numberOfBytesInFileToSplit)
 			{
@@ -146,6 +173,8 @@ class FileSplittingSession
 
 	domElementUpdate()
 	{
+		var session = this;
+
 		var containerFileUnified = ControlBuilder.container
 		(
 			[
@@ -156,14 +185,35 @@ class FileSplittingSession
 			true // hasBorder
 		);
 
+		var optionValueASpecifiedNumberOfParts =
+			"a specified number of parts:";
+
 		var containerSplitAndJoin = ControlBuilder.container
 		(
 			[
-				ControlBuilder.label("Bytes per Split:"),
+
+				ControlBuilder.label("Split into"),
+				ControlBuilder.select
+				(
+					"selectSplitMethod",
+					[
+						"parts with a maximum size in bytes:",
+						optionValueASpecifiedNumberOfParts
+					],
+					0, // optionToSelectIndex
+					// methodToRunOnChange
+					(event) =>
+					{
+						var valueSelected = event.target.value;
+						var valueToSet =
+							(valueSelected == optionValueASpecifiedNumberOfParts);
+						session.filesSplitByCountNotSize = valueToSet;
+					}
+				),
 				ControlBuilder.inputNumber
 				(
 					"inputBytesPerFileSplit", 
-					this.bytesPerFileSplit, 
+					this.bytesPerFileSplitOrFileCount, 
 					this.bytesPerFileSplit_Changed, 
 					this
 				),

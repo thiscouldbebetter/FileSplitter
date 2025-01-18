@@ -5,10 +5,8 @@ class ControlBuilder
 	{
 		var returnValue = document.createElement("button");
 		returnValue.innerHTML = text;
-		returnValue.onclick = function(event)
-		{
+		returnValue.onclick = (event) =>
 			methodToRunOnClick.call(contextForMethod, event);
-		}
 		return returnValue;
 	}
 
@@ -64,6 +62,43 @@ class ControlBuilder
 	{
 		var returnValue = document.createElement("label");
 		returnValue.innerHTML = text;
+		return returnValue;
+	}
+
+	static select
+	(
+		id,
+		optionsAsStrings,
+		optionToSelectIndex,
+		methodToRunOnChange
+	)
+	{
+		var d = document;
+		var returnValue = d.createElement("select");
+		returnValue.id = id;
+
+		for (var i = 0; i < optionsAsStrings.length; i++)
+		{
+			var optionAsString = optionsAsStrings[i];
+			var optionAsDomElement =
+				d.createElement("option");
+			optionAsDomElement.innerHTML = optionAsString;
+			optionAsDomElement.value = optionAsString;
+			returnValue.appendChild(optionAsDomElement);
+		}
+
+		if (methodToRunOnChange != null)
+		{
+			returnValue.onchange = (event) =>
+				methodToRunOnChange(event);
+		}
+
+		if (optionToSelectIndex != null)
+		{
+			returnValue.value =
+				optionsAsStrings[optionToSelectIndex];
+		}
+
 		return returnValue;
 	}
 
